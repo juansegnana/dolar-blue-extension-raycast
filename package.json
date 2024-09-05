@@ -1,6 +1,6 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
-  "name": "dolar-blue",
+  "name": "dollar-blue-rate",
   "title": "Dollar Blue - Argentine Exchange Rate",
   "description": "Get current and historical rates for Argentina's 'Blue Dollar' exchange.",
   "icon": "extension-icon.png",
