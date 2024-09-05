@@ -19,13 +19,14 @@ const CACHE_EXPIRY = 15 * 60 * 1000; // 15 minutes in milliseconds
 
 const cache = new Cache();
 
-export async function fetchLatestBlueRate(): Promise<BlueRate> {
-  const cachedData = cache.get(CACHE_KEY);
-  if (cachedData) {
-    const { data, timestamp } = JSON.parse(cachedData);
-    console.log({ data, timestamp });
-    if (Date.now() - timestamp < CACHE_EXPIRY) {
-      return data;
+export async function fetchLatestBlueRate(forceRefresh = false): Promise<BlueRate> {
+  if (!forceRefresh) {
+    const cachedData = cache.get(CACHE_KEY);
+    if (cachedData) {
+      const { data, timestamp } = JSON.parse(cachedData);
+      if (Date.now() - timestamp < CACHE_EXPIRY) {
+        return data;
+      }
     }
   }
 

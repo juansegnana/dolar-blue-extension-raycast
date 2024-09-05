@@ -7,17 +7,20 @@ export default function Command() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const latest = await fetchLatestBlueRate();
-        setLatestRate(latest);
-        setIsLoading(false);
-      } catch (err) {
-        setError("Failed to fetch data");
-        setIsLoading(false);
-      }
+  async function fetchData(forceRefresh = false) {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const latest = await fetchLatestBlueRate(forceRefresh);
+      setLatestRate(latest);
+    } catch (err) {
+      setError("Failed to fetch data");
+    } finally {
+      setIsLoading(false);
     }
+  }
+
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -28,6 +31,11 @@ export default function Command() {
         message: `${latestRate.value_sell} ARS as of ${new Date(latestRate.date).toLocaleString()}` 
       });
     }
+  }
+
+  async function handleRefresh() {
+    await fetchData(true);
+    showToast({ title: "Refreshed", message: "Latest rate fetched successfully" });
   }
 
   return (
@@ -43,6 +51,11 @@ export default function Command() {
               shortcut={{ modifiers: ["cmd"], key: "c" }}
             />
           )}
+          <Action
+            title="Refresh Rate"
+            onAction={handleRefresh}
+            shortcut={{ modifiers: ["cmd"], key: "r" }}
+          />
         </ActionPanel>
       }
     >

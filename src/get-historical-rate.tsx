@@ -1,11 +1,20 @@
-import { Form, ActionPanel, Action, showToast, Toast } from "@raycast/api";
-import { useState } from "react";
+import { Form, ActionPanel, Action, showToast, Toast, getPreferenceValues } from "@raycast/api";
+import { useState, useEffect } from "react";
 import { fetchHistoricalBlueRate } from "./fetchHistoricalRate";
 import { BlueRate } from "./fetchLatestRate";
 
-export default function Command() {
+// Add this interface for the arguments
+interface Arguments {
+  year?: string;
+  month?: string;
+  day?: string;
+}
+
+export default function Command(props: { arguments: Arguments }) {
+  const { year, month, day } = props.arguments;
+  
   const today = new Date();
-  today.setHours(0, 0, 0, 0); // Set to beginning of the day
+  today.setHours(0, 0, 0, 0);
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
 
@@ -15,20 +24,34 @@ export default function Command() {
 
   const minDate = new Date("2013-09-30");
 
+  // Use useEffect to set the date from arguments
+  useEffect(() => {
+    if (year && month && day) {
+      const argDate = new Date(`${year}-${month}-${day}`);
+      if (!isNaN(argDate.getTime()) && argDate >= minDate && argDate <= today) {
+        setDate(argDate);
+        handleSubmit();
+      } else {
+        showToast({ style: Toast.Style.Failure, title: "Invalid date from arguments" });
+      }
+    }
+  }, [year, month, day]);
+
   async function handleSubmit() {
-    if (!date) {
+    const dateToUse = date;
+    if (!dateToUse) {
       showToast({ style: Toast.Style.Failure, title: "Please select a date" });
       return;
     }
 
-    if (date < minDate) {
+    if (dateToUse < minDate) {
       showToast({ style: Toast.Style.Failure, title: "Date cannot be before September 30, 2013" });
       return;
     }
 
     setIsLoading(true);
     try {
-      const formattedDate = date.toISOString().split('T')[0];
+      const formattedDate = dateToUse.toISOString().split('T')[0];
       const rate = await fetchHistoricalBlueRate(formattedDate);
       setHistoricalRate(rate);
       showToast({ style: Toast.Style.Success, title: "Historical rate fetched successfully" });
@@ -49,7 +72,7 @@ export default function Command() {
       isLoading={isLoading}
       actions={
         <ActionPanel>
-          <Action.SubmitForm onSubmit={handleSubmit} title="Fetch Rate" />
+          <Action.SubmitForm onSubmit={() => handleSubmit()} title="Fetch Rate" />
           {historicalRate && (
             <Action.CopyToClipboard
               title="Copy Rate to Clipboard"
